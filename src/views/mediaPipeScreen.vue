@@ -5,16 +5,14 @@
         id="liveView"
         class="relative flex flex-col items-center justify-center"
       >
-        <div>
+        <!-- Button disappears after click -->
+        <div v-if="!webcamRunning">
           <button
             @click="enableCam"
-            class="mdc-button mdc-button--raised bg-blue-500 text-white px-6 py-2 rounded-full shadow-md hover:bg-blue-600"
-            ref="webcamButton"
+            class="bg-[#8B4513] hover:bg-[#53311a] text-white font-bold py-4 px-28 text-2xl rounded-lg"
           >
             <span class="mdc-button__ripple"></span>
-            <span class="mdc-button__label">
-              {{ webcamRunning ? "DISABLE PREDICTIONS" : "ENABLE PREDICTIONS" }}
-            </span>
+            <span class="mdc-button__label">Start Countdown</span>
           </button>
         </div>
 
@@ -37,7 +35,8 @@
 
         <!-- Countdown timer and movement status -->
         <div v-if="countdownStarted" class="mt-4">
-          <h3 class="text-xl">Starting in: {{ countdown }}</h3>
+          <p class="text-xl text-center">Starting in:</p>
+          <h3 class="text-xl text-center">{{ countdown }}</h3>
         </div>
         <div v-if="movementStatus" class="mt-4">
           <h3 class="text-lg">Movement Status: {{ movementStatus }}</h3>
@@ -61,11 +60,12 @@ export default {
       runningMode: "IMAGE",
       webcamRunning: false,
       poseLandmarkerLoaded: false,
-      countdown: 2, // Set initial countdown to 5 seconds
+      countdown: 5, // Set initial countdown to 5 seconds
       countdownStarted: false,
       movementStatus: "",
       prevLandmarks: null,
-      countdownIntervalId: null
+      countdownIntervalId: null,
+      pushToNextPage: false
     };
   },
   mounted() {
@@ -94,30 +94,28 @@ export default {
       }
     },
     async enableCam() {
-      if (!this.poseLandmarker) {
-        console.log("Wait! poseLandmarker not loaded yet.");
-        return;
-      }
+  if (!this.poseLandmarker) {
+    console.log("Wait! poseLandmarker not loaded yet.");
+    return;
+  }
 
-      this.webcamRunning = true;
+  this.webcamRunning = true;
 
-      const webcamButton = this.$refs.webcamButton;
-      webcamButton.querySelector(".mdc-button__label").innerText = "DISABLE PREDICTIONS"; // Ensure the label is updated immediately
+  const constraints = {
+    video: true,
+  };
 
-      const constraints = {
-        video: true,
-      };
+  const videoElement = this.$refs.webcam;
+  const canvasElement = this.$refs.outputCanvas;
+  const canvasCtx = canvasElement.getContext("2d");
 
-      const videoElement = this.$refs.webcam;
-      const canvasElement = this.$refs.outputCanvas;
-      const canvasCtx = canvasElement.getContext("2d");
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      videoElement.srcObject = stream;
-      videoElement.addEventListener("loadeddata", () => {
-        this.startCountdown(videoElement, canvasCtx);
-      });
-    },
+  const stream = await navigator.mediaDevices.getUserMedia(constraints);
+  videoElement.srcObject = stream;
+  videoElement.addEventListener("loadeddata", () => {
+    this.startCountdown(videoElement, canvasCtx);
+  });
+}
+,
 
     startCountdown(videoElement, canvasCtx) {
       this.countdownStarted = true;
@@ -192,6 +190,7 @@ export default {
           if (movementDetected) {
             this.movementStatus = "Movement detected!";
             this.lastDetectionTime = Date.now();
+            // pushToNextPage = true;
           } else {
             this.movementStatus = "No movement detected.";
           }
@@ -226,6 +225,10 @@ export default {
   if (this.webcamRunning) {
     window.requestAnimationFrame(() => this.predictWebcam(video, canvasCtx));
   }
+
+  // if (pushToNextPage) {
+  //   this.$router.push( '/breathtest/1' );
+  // }
 }
 
   },
