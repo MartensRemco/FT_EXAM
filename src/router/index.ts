@@ -6,8 +6,8 @@ import MediaPipeScreen from "../views/mediaPipeScreen.vue";
 import HomeScreen from "../views/homeScreen.vue";
 import gameTwoPlayersScreen from "../views/gameTwoPlayersScreen.vue";
 import gameTwoPlayerRoundOneScreen from "../views/gameTwoPlayersRoundOneScreen.vue";
-import gameTwoPlayerRoundTwoScreen from "../views/gameTwoPlayersRoundOneScreen.vue";
-import gameTwoPlayerRoundThreeScreen from "../views/gameTwoPlayersRoundOneScreen.vue";
+import gameTwoPlayerRoundTwoScreen from "../views/gameTwoPlayersRoundTwoScreen.vue";
+import gameTwoPlayerRoundThreeScreen from "../views/gameTwoPlayersRoundThreeScreen.vue";
 
 // Define routes
 const routes: Array<RouteRecordRaw> = [
