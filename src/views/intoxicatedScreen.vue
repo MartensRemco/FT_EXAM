@@ -10,10 +10,22 @@
         Player {{ playerNumber }} is intoxicated!
       </p>
 
+      <!-- BAC Level -->
+      <p class="text-xl pt-4 font-bold text-red-500">
+        BAC Level: {{ bacLevel }}‰
+      </p>
+
+      <!-- Driving Estimate -->
+      <p v-if="drivingEstimate !== null" class="text-lg pt-4 text-gray-700">
+        Estimated time until you can legally drive:
+        <span class="font-bold">{{ drivingEstimate }}</span
+        >.
+      </p>
+
       <!-- Instruction Text -->
       <p class="text-lg pt-4">
-        You seem to be intoxicated, take a the receipt to get a free water at
-        the bar
+        You seem to be intoxicated, take the receipt to get a free water at the
+        bar.
       </p>
     </div>
 
@@ -44,29 +56,51 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { useRouter } from "vue-router";
+import { defineComponent, computed, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 export default defineComponent({
-  name: "FinalScreen",
+  name: "IntoxicatedScreen",
   setup() {
     const route = useRoute();
     const router = useRouter();
-    const playerNumber = route.params.player || "unknown"; // Fetch player number from the URL
 
-    function handleNext() {
-      console.log("Starting breathalyzer test for Player:", playerNumber);
-      // Add logic for the next steps here
-    }
+    const playerNumber = route.params.player || "unknown"; // Fetch player number from the URL
+    const bacLevel = parseFloat(route.query.bac as string) || 0; // Fetch BAC value from query parameter and parse as number
+
+    // Compute the driving estimate
+    const drivingEstimate = computed(() => {
+      if (!bacLevel) return null;
+
+      const eliminationRate = 0.15; // Average BAC reduction rate per hour (‰/h)
+      const legalLimit = 0.5; // Legal BAC limit in ‰
+      const hoursNeeded = Math.max(
+        0,
+        (bacLevel - legalLimit) / eliminationRate
+      );
+
+      const hours = Math.floor(hoursNeeded);
+      const minutes = Math.round((hoursNeeded - hours) * 60);
+
+      if (hours === 0 && minutes === 0) {
+        return "immediately"; // Already below the legal limit
+      } else if (hours === 0) {
+        return `${minutes} minutes`;
+      } else {
+        return `${hours} hours and ${minutes} minutes`;
+      }
+    });
+
     onMounted(() => {
       setTimeout(() => {
         router.push("/"); // Redirect to the home page after 5 seconds
-      }, 5000);
+      }, 15000);
     });
+
     return {
       playerNumber,
-      handleNext,
+      bacLevel,
+      drivingEstimate,
     };
   },
 });

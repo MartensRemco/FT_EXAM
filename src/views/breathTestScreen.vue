@@ -37,6 +37,11 @@
       <!-- Blow Below Text -->
       <p class="text-2xl font-bold pb-6">Blow below</p>
 
+      <!-- Display BAC Level if Intoxicated -->
+      <p v-if="bacLevel !== null" class="text-xl font-bold text-red-500">
+        BAC Level: {{ bacLevel }}‰
+      </p>
+
       <!-- Next Button -->
       <button
         class="bg-[#8B4513] hover:bg-[#53311a] text-white font-bold py-4 px-20 text-2xl rounded-lg"
@@ -61,6 +66,7 @@ export default defineComponent({
     const playerNumber = route.params.player || "unknown";
     const status = ref("Disconnected");
     const testResult = ref("");
+    const bacLevel = ref<number | null>(null); // BAC level if intoxicated
     let characteristic: BluetoothRemoteGATTCharacteristic | null | undefined =
       null;
 
@@ -108,7 +114,11 @@ export default defineComponent({
 
         // Navigate based on result
         if (decodedValue === "Intoxicated") {
-          router.push(`/intoxicated/${playerNumber}`);
+          bacLevel.value = generateRandomBAC(); // Generate random BAC level
+          router.push({
+            path: `/intoxicated/${playerNumber}`,
+            query: { bac: bacLevel.value.toString() }, // Pass BAC as a query parameter
+          });
         } else if (decodedValue === "Sober") {
           router.push(`/sober/${playerNumber}`);
         } else {
@@ -134,10 +144,16 @@ export default defineComponent({
       }
     }
 
+    // Generate a believable random BAC value
+    function generateRandomBAC(): number {
+      return parseFloat((Math.random() * (2.5 - 0.5) + 0.5).toFixed(2));
+    }
+
     return {
       playerNumber,
       status,
       testResult,
+      bacLevel,
       handleNext,
     };
   },
