@@ -5,6 +5,7 @@ import RouteTestScreen from "../views/routeTestScreen.vue";
 import MediaPipeScreen from "../views/mediaPipeScreen.vue";
 import HomeScreen from "../views/homeScreen.vue";
 import gameTwoPlayersScreen from "../views/gameTwoPlayersScreen.vue";
+import gameTwoPlayerRoundOneScreen from "../views/gameTwoPlayersRoundOneScreen.vue";
 
 // Define routes
 const routes: Array<RouteRecordRaw> = [
@@ -37,6 +38,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/game2",
     name: "game2",
     component: gameTwoPlayersScreen,
+  },
+  {
+    path: "/roundOne",
+    name: "roundOne",
+    component: gameTwoPlayerRoundOneScreen,
   },
 ];
 
