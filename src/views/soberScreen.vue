@@ -62,7 +62,7 @@ export default defineComponent({
     onMounted(() => {
       setTimeout(() => {
         router.push("/"); // Redirect to the home page after 5 seconds
-      }, 5000);
+      }, 15000);
     });
     return {
       playerNumber,
