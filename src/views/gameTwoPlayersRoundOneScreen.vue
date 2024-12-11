@@ -7,20 +7,25 @@
         </div>
         <img :src="pose1" alt="First Pose" width="100" height="625" />
     </div>
-    <div class="flex justify-center w-full items-center pt-10">
-        <div class="w-1/2 h-96 bg-gray-500">
-        </div>
 
+    <div class="flex justify-center w-full items-center pt-10">
+        <div class="w-1/2 h-96 bg-gray-500"></div>
     </div>
+
     <div class="flex flex-col items-center justify-center mt-10">
         <p class="text-xl">Stand still in this pose in</p>
-        <p class="text-xl mt-2"><span class="font-bold"> 1 2 3</span> 4 5</p>
+        <Countdown />
     </div>
 </template>
 
 <script lang="ts">
 import pose1 from "@/assets/pose1.svg";
+import Countdown from "@/components/Countdown.vue"; // Import Countdown component
+
 export default {
+    components: {
+        Countdown, // Register the Countdown component
+    },
     setup() {
         return {
             pose1,
