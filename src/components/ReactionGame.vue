@@ -1,31 +1,31 @@
 <template>
-  <div class="w-full max-w-xl mx-auto bg-white shadow-lg rounded-lg p-6">
-    <h1 class="text-2xl font-bold mb-4 text-center">
-      Reaction & Precision Game
-    </h1>
-    <div class="relative h-96 w-full border rounded-lg bg-gray-50">
-      <!-- Target Circle -->
-      <div
-        v-if="isTargetVisible"
-        :style="circleStyle"
-        class="absolute bg-red-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-        @click="handleClick"
-      ></div>
+  <div class="h-screen flex flex-col items-center justify-center bg-gray-100">
+    <h1 class="text-3xl font-bold mb-6">Reaction & Precision Game</h1>
+    <div class="w-full max-w-lg bg-white shadow-lg rounded-lg p-6">
+      <div class="relative h-96 w-full border rounded-lg bg-gray-50">
+        <!-- Target Circle -->
+        <div
+          v-if="isTargetVisible"
+          :style="circleStyle"
+          class="absolute bg-red-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+          @click="handleClick"
+        ></div>
+      </div>
+      <div class="mt-6">
+        <h2 class="text-xl font-semibold">Scoreboard</h2>
+        <ul class="mt-2 text-gray-700">
+          <li><strong>Total Score:</strong> {{ totalScore }}</li>
+          <li><strong>Reaction Time:</strong> {{ reactionTime }}ms</li>
+          <li><strong>Precision:</strong> {{ precision }}%</li>
+        </ul>
+      </div>
+      <button
+        class="mt-6 bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600"
+        @click="startGame"
+      >
+        Start Game
+      </button>
     </div>
-    <div class="mt-6">
-      <h2 class="text-xl font-semibold">Scoreboard</h2>
-      <ul class="mt-2 text-gray-700">
-        <li>Total Score: {{ totalScore }}</li>
-        <li>Reaction Time: {{ reactionTime }}ms</li>
-        <li>Precision: {{ precision }}%</li>
-      </ul>
-    </div>
-    <button
-      class="mt-6 bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600"
-      @click="startGame"
-    >
-      Start Game
-    </button>
   </div>
 </template>
 
@@ -55,9 +55,14 @@ export default {
     },
     spawnTarget() {
       this.isTargetVisible = true;
+      const containerSize = 384; // Height/Width of the container in Tailwind (h-96 = 384px)
       this.targetPosition = {
-        x: Math.random() * (300 - this.targetSize) + this.targetSize,
-        y: Math.random() * (300 - this.targetSize) + this.targetSize,
+        x:
+          Math.random() * (containerSize - this.targetSize) +
+          this.targetSize / 2,
+        y:
+          Math.random() * (containerSize - this.targetSize) +
+          this.targetSize / 2,
       };
       this.circleStyle = {
         left: `${this.targetPosition.x}px`,
@@ -68,37 +73,47 @@ export default {
       this.targetStartTime = performance.now();
     },
     handleClick(event) {
-      const clickX = event.offsetX;
-      const clickY = event.offsetY;
+      // Get absolute click position
+      const clickX = event.clientX;
+      const clickY = event.clientY;
 
-      // Calculate reaction time
-      const currentTime = performance.now();
-      this.reactionTime = Math.round(currentTime - this.targetStartTime);
+      // Get circle's absolute center position
+      const circleRect = event.target.getBoundingClientRect();
+      const circleCenterX = circleRect.left + circleRect.width / 2;
+      const circleCenterY = circleRect.top + circleRect.height / 2;
 
-      // Calculate precision
-      const circleCenterX = this.targetPosition.x + this.targetSize / 2;
-      const circleCenterY = this.targetPosition.y + this.targetSize / 2;
+      // Calculate distance from click to center of circle
       const distance = Math.sqrt(
         Math.pow(circleCenterX - clickX, 2) +
           Math.pow(circleCenterY - clickY, 2)
       );
       const maxDistance = this.targetSize / 2;
+
+      // Calculate precision percentage
       this.precision = Math.max(
         0,
         Math.round(100 - (distance / maxDistance) * 100)
       );
 
-      // Update score
-      this.totalScore += this.reactionTime + this.precision;
+      // Calculate reaction time
+      const currentTime = performance.now();
+      this.reactionTime = Math.round(currentTime - this.targetStartTime);
 
-      // Hide target and spawn a new one
+      // Update score
+      this.totalScore += this.precision;
+
+      // Hide and respawn target
       this.isTargetVisible = false;
-      setTimeout(() => this.spawnTarget(), 1000); // Delay before next target
+      setTimeout(() => this.spawnTarget(), 1000); // 1-second delay
     },
   },
 };
 </script>
 
-<style scoped>
-/* Add any additional styles here if needed */
+<style>
+/* Optional global styling */
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+}
 </style>
