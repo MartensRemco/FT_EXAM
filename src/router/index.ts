@@ -2,13 +2,14 @@ import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
 import EspTestScreen from "../views/espTestScreen.vue";
 import RouteTestScreen from "../views/routeTestScreen.vue";
+import HomeScreen from "../views/homeScreen.vue";
 
 // Define routes
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     name: "home",
-    component: () => import("../App.vue"),
+    component: () => HomeScreen,
   },
   {
     path: "/esp",
