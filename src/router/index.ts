@@ -38,6 +38,21 @@ const routes: Array<RouteRecordRaw> = [
     name: "game2",
     component: gameTwoPlayersScreen,
   },
+  {
+    path: "/breathtest/:player",
+    name: "breathtest",
+    component: () => import("../views/breathTestScreen.vue"),
+  },
+  {
+    path: "/sober/:player",
+    name: "sober",
+    component: () => import("../views/soberScreen.vue"),
+  },
+  {
+    path: "/intoxicated/:player",
+    name: "intoxicated",
+    component: () => import("../views/intoxicatedScreen.vue"),
+  },
 ];
 
 // Create the router instance
