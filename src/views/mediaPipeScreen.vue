@@ -61,7 +61,7 @@ export default {
       runningMode: "IMAGE",
       webcamRunning: false,
       poseLandmarkerLoaded: false,
-      countdown: 5, // Set initial countdown to 5 seconds
+      countdown: 2, // Set initial countdown to 5 seconds
       countdownStarted: false,
       movementStatus: "",
       prevLandmarks: null,
@@ -137,7 +137,7 @@ export default {
       this.predictWebcam(videoElement, canvasCtx);
     },
 
-async predictWebcam(video, canvasCtx) {
+    async predictWebcam(video, canvasCtx) {
   const canvasElement = this.$refs.outputCanvas;
   const videoHeight = "360px";
   const videoWidth = "480px";
@@ -156,35 +156,54 @@ async predictWebcam(video, canvasCtx) {
   try {
     this.poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
       if (result && result.landmarks) {
-        // Track specific landmarks after countdown
         const trackedLandmarks = [
           29, 30, 27, 28, 23, 24, 21, 22, 11, 12
         ];
 
-        const visibleLandmarks = trackedLandmarks.filter((index) => {
-          const landmark = result.landmarks[index];
-          return landmark && landmark.visibility > 0.5; // visibility threshold
-        });
-
-        if (visibleLandmarks.length > 0) {
-          this.movementStatus = "Movement detected!";
-        } else {
-          this.movementStatus = "No movement detected.";
+        if (!this.previousLandmarks) {
+          // Initialize the previousLandmarks if not already set
+          this.previousLandmarks = result.landmarks.map(() => null);
         }
 
-        // Log the landmarks' X, Y, Z values and visibility
-        console.log("Landmarks Data:");
-        console.log(result.landmarks)
+        let movementDetected = false;
+
         result.landmarks.forEach((landmark, index) => {
           if (landmark) {
-            console.log(`Landmark ${trackedLandmarks[index]}: X: ${landmark[trackedLandmarks[index]].x}, Y: ${landmark[trackedLandmarks[index]].y}, Z: ${landmark[trackedLandmarks[index]].z}`);
+            trackedLandmarks.forEach(trackedIndex => {
+              const current = landmark[trackedIndex];
+              const previous = this.previousLandmarks[index]?.[trackedIndex];
+
+              if (current && previous) {
+                const movement = Math.sqrt(
+                  Math.pow(current.x - previous.x, 2) +
+                  Math.pow(current.y - previous.y, 2) +
+                  Math.pow(current.z - previous.z, 2)
+                );
+                if (movement > 0.25) { // Threshold for movement detection
+                  movementDetected = true;
+                }
+              }
+            });
           }
         });
 
+        // Add a cooldown mechanism
+        if (!this.lastDetectionTime || Date.now() - this.lastDetectionTime > 1000) { // Cooldown of 1000ms (1 second)
+          if (movementDetected) {
+            this.movementStatus = "Movement detected!";
+            this.lastDetectionTime = Date.now();
+          } else {
+            this.movementStatus = "No movement detected.";
+          }
+        }
+
+        // Store current landmarks as previous for the next frame
+        this.previousLandmarks = JSON.parse(JSON.stringify(result.landmarks));
+
+        // Visualization on canvas
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-        // Draw landmarks and connectors on the canvas
         const drawingUtils = new DrawingUtils(canvasCtx);
         for (const landmark of result.landmarks) {
           if (landmark) {
