@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {},
     fontFamily: {
-      sans: ['"Lobster Two"'],
+      customFont: ['"Lobster Two"', "sans-serif"],
     },
   },
   plugins: [],
