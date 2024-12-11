@@ -9,7 +9,7 @@ import { ref, onMounted } from "vue";
 
 export default {
     setup() {
-        const countdown = ref(5);
+        const countdown = ref<number | string>(5);
 
         // Countdown function
         const startCountdown = () => {
@@ -19,7 +19,8 @@ export default {
                     count--;
                     countdown.value = count;
                 } else {
-                    clearInterval(interval); // Stop the countdown once it reaches 1
+                    countdown.value = "FREEZE!";
+                    clearInterval(interval);
                 }
             }, 1000);
         };
