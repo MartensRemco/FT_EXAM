@@ -1,28 +1,46 @@
 <template>
-  <div>
-    <h1>Pose detection using the MediaPipe PoseLandmarker task</h1>
-
+  <div class="p-4">
     <section v-if="poseLandmarkerLoaded" id="demos">
-      <h2>Demo: Webcam continuous pose landmarks detection</h2>
-      <p>
-        Stand in front of your webcam to get real-time pose landmarker
-        detection. Click <b>enable webcam</b> below and grant access to the
-        webcam if prompted.
-      </p>
+      <div
+        id="liveView"
+        class="relative flex flex-col items-center justify-center"
+      >
+        <div>
+          <button
+            @click="enableCam"
+            class="mdc-button mdc-button--raised bg-blue-500 text-white px-6 py-2 rounded-full shadow-md hover:bg-blue-600"
+            ref="webcamButton"
+          >
+            <span class="mdc-button__ripple"></span>
+            <span class="mdc-button__label">
+              {{ webcamRunning ? "DISABLE PREDICTIONS" : "ENABLE PREDICTIONS" }}
+            </span>
+          </button>
+        </div>
 
-      <div id="liveView" class="videoView">
-        <button @click="enableCam" class="mdc-button mdc-button--raised" ref="webcamButton">
-          <span class="mdc-button__ripple"></span>
-          <span class="mdc-button__label">{{
-            webcamRunning ? "DISABLE PREDICTIONS" : "ENABLE WEBCAM"
-          }}</span>
-        </button>
+        <div class="relative mt-4">
+          <video
+            ref="webcam"
+            id="webcam"
+            class="object-cover rounded-lg"
+            autoplay
+            playsinline
+          ></video>
+          <canvas
+            ref="outputCanvas"
+            id="output_canvas"
+            width="1280"
+            height="720"
+            class="absolute top-0 left-0 rounded-lg"
+          ></canvas>
+        </div>
 
-        <div style="position: relative">
-          <video ref="webcam" id="webcam" style="width: 100%; height: 100%; position: absolute" autoplay
-            playsinline></video>
-          <canvas ref="outputCanvas" id="output_canvas" width="1280" height="720"
-            style="position: absolute; left: 0px; top: 0px"></canvas>
+        <!-- Countdown timer and movement status -->
+        <div v-if="countdownStarted" class="mt-4">
+          <h3 class="text-xl">Starting in: {{ countdown }}</h3>
+        </div>
+        <div v-if="movementStatus" class="mt-4">
+          <h3 class="text-lg">Movement Status: {{ movementStatus }}</h3>
         </div>
       </div>
     </section>
@@ -43,188 +61,154 @@ export default {
       runningMode: "IMAGE",
       webcamRunning: false,
       poseLandmarkerLoaded: false,
-      images: [
-        {
-          src: "https://assets.codepen.io/9177687/woman-ge0f199f92_640.jpg",
-          title: "Click to get detection!",
-        },
-        {
-          src: "https://assets.codepen.io/9177687/woman-g1af8d3deb_640.jpg",
-          title: "Click to get detection!",
-        },
-      ],
+      countdown: 5, // Set initial countdown to 5 seconds
+      countdownStarted: false,
+      movementStatus: "",
+      prevLandmarks: null,
+      countdownIntervalId: null
     };
   },
   mounted() {
     this.createPoseLandmarker();
+    this.enableCam();
   },
   methods: {
     async createPoseLandmarker() {
-      const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-      );
-      this.poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
-          delegate: "GPU",
-        },
-        runningMode: this.runningMode,
-        numPoses: 2,
-      });
-      this.poseLandmarkerLoaded = true;
+      try {
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+        );
+        console.log("Vision model loaded successfully.");
+        this.poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
+            delegate: "GPU",
+          },
+          runningMode: this.runningMode,
+          numPoses: 2,
+        });
+        console.log("PoseLandmarker initialized.");
+        this.poseLandmarkerLoaded = true;
+      } catch (error) {
+        console.error("Error initializing PoseLandmarker:", error);
+      }
     },
-
-    async handleClick(event) {
-      if (!this.poseLandmarker) {
-        console.log("Wait for poseLandmarker to load before clicking!");
-        return;
-      }
-
-      if (this.runningMode === "VIDEO") {
-        this.runningMode = "IMAGE";
-        await this.poseLandmarker.setOptions({ runningMode: "IMAGE" });
-      }
-
-      // Remove previous canvases
-      const allCanvas =
-        event.target.parentNode.getElementsByClassName("canvas");
-      for (let i = allCanvas.length - 1; i >= 0; i--) {
-        allCanvas[i].parentNode.removeChild(allCanvas[i]);
-      }
-
-      // Detect pose in image
-      const img = event.target;
-      img.crossOrigin = "anonymous"; // Explicitly set crossOrigin attribute for image
-      this.poseLandmarker.detect(img, (result) => {
-        const canvas = document.createElement("canvas");
-        canvas.setAttribute("class", "canvas");
-        canvas.setAttribute("width", img.naturalWidth + "px");
-        canvas.setAttribute("height", img.naturalHeight + "px");
-        canvas.style =
-          "left: 0px;" +
-          "top: 0px;" +
-          "width: " +
-          img.width +
-          "px;" +
-          "height: " +
-          img.height +
-          "px;";
-        img.parentNode.appendChild(canvas);
-
-        const canvasCtx = canvas.getContext("2d");
-        const drawingUtils = new DrawingUtils(canvasCtx);
-
-        for (const landmark of result.landmarks) {
-          drawingUtils.drawLandmarks(landmark, {
-            radius: (data) => DrawingUtils.lerp(data.from.z, -0.15, 0.1, 5, 1),
-          });
-          drawingUtils.drawConnectors(
-            landmark,
-            PoseLandmarker.POSE_CONNECTIONS
-          );
-        }
-      });
-    },
-
     async enableCam() {
       if (!this.poseLandmarker) {
         console.log("Wait! poseLandmarker not loaded yet.");
         return;
       }
 
-      this.webcamRunning = !this.webcamRunning;
+      this.webcamRunning = true;
 
-      // Access the button using the ref
       const webcamButton = this.$refs.webcamButton;
-      webcamButton.querySelector(".mdc-button__label").innerText = this
-        .webcamRunning
-        ? "DISABLE PREDICTIONS"
-        : "ENABLE WEBCAM";
+      webcamButton.querySelector(".mdc-button__label").innerText = "DISABLE PREDICTIONS"; // Ensure the label is updated immediately
 
-      if (this.webcamRunning) {
-        const constraints = {
-          video: true,
-        };
+      const constraints = {
+        video: true,
+      };
 
-        const videoElement = this.$refs.webcam;
-        const canvasElement = this.$refs.outputCanvas;
-        const canvasCtx = canvasElement.getContext("2d");
+      const videoElement = this.$refs.webcam;
+      const canvasElement = this.$refs.outputCanvas;
+      const canvasCtx = canvasElement.getContext("2d");
 
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        videoElement.srcObject = stream;
-        videoElement.addEventListener("loadeddata", () =>
-          this.predictWebcam(videoElement, canvasCtx)
-        );
-      }
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      videoElement.srcObject = stream;
+      videoElement.addEventListener("loadeddata", () => {
+        this.startCountdown(videoElement, canvasCtx);
+      });
     },
 
-    async predictWebcam(video, canvasCtx) {
-      const canvasElement = this.$refs.outputCanvas;
-      const videoHeight = "360px";
-      const videoWidth = "480px";
+    startCountdown(videoElement, canvasCtx) {
+      this.countdownStarted = true;
+      const countdownInterval = setInterval(() => {
+        this.countdown--;
+        if (this.countdown === 0) {
+          clearInterval(countdownInterval);
+          this.startPoseDetection(videoElement, canvasCtx);
+        }
+      }, 1000);
+    },
 
-      canvasElement.style.height = videoHeight;
-      video.style.height = videoHeight;
-      canvasElement.style.width = videoWidth;
-      video.style.width = videoWidth;
+    startPoseDetection(videoElement, canvasCtx) {
+      this.movementStatus = "Tracking your pose...";
 
-      if (this.runningMode === "IMAGE") {
-        this.runningMode = "VIDEO";
-        await this.poseLandmarker.setOptions({ runningMode: "VIDEO" });
-      }
+      // Start pose detection after countdown
+      this.predictWebcam(videoElement, canvasCtx);
+    },
 
-      const startTimeMs = performance.now();
-      this.poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
+async predictWebcam(video, canvasCtx) {
+  const canvasElement = this.$refs.outputCanvas;
+  const videoHeight = "360px";
+  const videoWidth = "480px";
+
+  canvasElement.style.height = videoHeight;
+  video.style.height = videoHeight;
+  canvasElement.style.width = videoWidth;
+  video.style.width = videoWidth;
+
+  if (this.runningMode === "IMAGE") {
+    this.runningMode = "VIDEO";
+    await this.poseLandmarker.setOptions({ runningMode: "VIDEO" });
+  }
+
+  const startTimeMs = performance.now();
+  try {
+    this.poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
+      if (result && result.landmarks) {
+        // Track specific landmarks after countdown
+        const trackedLandmarks = [
+          29, 30, 27, 28, 23, 24, 21, 22, 11, 12
+        ];
+
+        const visibleLandmarks = trackedLandmarks.filter((index) => {
+          const landmark = result.landmarks[index];
+          return landmark && landmark.visibility > 0.5; // visibility threshold
+        });
+
+        if (visibleLandmarks.length > 0) {
+          this.movementStatus = "Movement detected!";
+        } else {
+          this.movementStatus = "No movement detected.";
+        }
+
+        // Log the landmarks' X, Y, Z values and visibility
+        console.log("Landmarks Data:");
+        console.log(result.landmarks)
+        result.landmarks.forEach((landmark, index) => {
+          if (landmark) {
+            console.log(`Landmark ${trackedLandmarks[index]}: X: ${landmark[trackedLandmarks[index]].x}, Y: ${landmark[trackedLandmarks[index]].y}, Z: ${landmark[trackedLandmarks[index]].z}`);
+          }
+        });
+
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
+        // Draw landmarks and connectors on the canvas
+        const drawingUtils = new DrawingUtils(canvasCtx);
         for (const landmark of result.landmarks) {
-          const drawingUtils = new DrawingUtils(canvasCtx);
-          drawingUtils.drawLandmarks(landmark, {
-            radius: (data) => DrawingUtils.lerp(data.from.z, -0.15, 0.1, 5, 1),
-          });
-          drawingUtils.drawConnectors(
-            landmark,
-            PoseLandmarker.POSE_CONNECTIONS
-          );
+          if (landmark) {
+            drawingUtils.drawLandmarks(landmark, {
+              radius: (data) => DrawingUtils.lerp(data.from.z, -0.15, 0.1, 5, 1),
+            });
+            drawingUtils.drawConnectors(landmark, PoseLandmarker.POSE_CONNECTIONS);
+          }
         }
 
         canvasCtx.restore();
-      });
-
-      if (this.webcamRunning) {
-        window.requestAnimationFrame(() =>
-          this.predictWebcam(video, canvasCtx)
-        );
+      } else {
+        console.error("No landmarks detected.");
       }
-    },
+    });
+  } catch (error) {
+    console.error("Error during pose detection:", error);
+  }
+
+  if (this.webcamRunning) {
+    window.requestAnimationFrame(() => this.predictWebcam(video, canvasCtx));
+  }
+}
+
   },
 };
 </script>
-
-<style scoped>
-.videoView {
-  position: relative;
-}
-
-.mdc-button {
-  margin: 10px;
-  padding: 10px 20px;
-}
-
-.canvas {
-  position: absolute;
-  left: 0px;
-  top: 0px;
-}
-
-.detectOnClick {
-  cursor: pointer;
-}
-
-#liveView {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-</style>
