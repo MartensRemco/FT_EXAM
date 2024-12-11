@@ -27,6 +27,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "mediapipe",
     component: MediaPipeScreen,
   },
+  {
+    path: "/circles",
+    name: "circles",
+    component: () => import("../views/circleGame.vue"),
+  },
 ];
 
 // Create the router instance
