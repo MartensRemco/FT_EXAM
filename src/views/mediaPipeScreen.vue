@@ -11,11 +11,7 @@
       </p>
 
       <div id="liveView" class="videoView">
-        <button
-          @click="enableCam"
-          class="mdc-button mdc-button--raised"
-          ref="webcamButton"
-        >
+        <button @click="enableCam" class="mdc-button mdc-button--raised" ref="webcamButton">
           <span class="mdc-button__ripple"></span>
           <span class="mdc-button__label">{{
             webcamRunning ? "DISABLE PREDICTIONS" : "ENABLE WEBCAM"
@@ -23,20 +19,10 @@
         </button>
 
         <div style="position: relative">
-          <video
-            ref="webcam"
-            id="webcam"
-            style="width: 100%; height: 100%; position: absolute"
-            autoplay
-            playsinline
-          ></video>
-          <canvas
-            ref="outputCanvas"
-            id="output_canvas"
-            width="1280"
-            height="720"
-            style="position: absolute; left: 0px; top: 0px"
-          ></canvas>
+          <video ref="webcam" id="webcam" style="width: 100%; height: 100%; position: absolute" autoplay
+            playsinline></video>
+          <canvas ref="outputCanvas" id="output_canvas" width="1280" height="720"
+            style="position: absolute; left: 0px; top: 0px"></canvas>
         </div>
       </div>
     </section>
@@ -187,7 +173,7 @@ export default {
         await this.poseLandmarker.setOptions({ runningMode: "VIDEO" });
       }
 
-      let startTimeMs = performance.now();
+      const startTimeMs = performance.now();
       this.poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
