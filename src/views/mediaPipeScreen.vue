@@ -43,7 +43,7 @@
   </div>
 </template>
 
-<script>
+<script lang="js">
 import {
   PoseLandmarker,
   FilesetResolver,

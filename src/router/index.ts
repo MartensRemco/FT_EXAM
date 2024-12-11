@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
 import EspTestScreen from "../views/espTestScreen.vue";
 import RouteTestScreen from "../views/routeTestScreen.vue";
+import MediaPipeScreen from "../views/mediaPipeScreen.vue";
 
 // Define routes
 const routes: Array<RouteRecordRaw> = [
@@ -19,6 +20,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/test",
     name: "test",
     component: RouteTestScreen,
+  },
+  {
+    path: "/mediapipe",
+    name: "mediapipe",
+    component: MediaPipeScreen,
   },
 ];
 
