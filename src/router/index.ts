@@ -5,6 +5,9 @@ import RouteTestScreen from "../views/routeTestScreen.vue";
 import MediaPipeScreen from "../views/mediaPipeScreen.vue";
 import HomeScreen from "../views/homeScreen.vue";
 import gameTwoPlayersScreen from "../views/gameTwoPlayersScreen.vue";
+import gameTwoPlayerRoundOneScreen from "../views/gameTwoPlayersRoundOneScreen.vue";
+import gameTwoPlayerRoundTwoScreen from "../views/gameTwoPlayersRoundTwoScreen.vue";
+import gameTwoPlayerRoundThreeScreen from "../views/gameTwoPlayersRoundThreeScreen.vue";
 
 // Define routes
 const routes: Array<RouteRecordRaw> = [
@@ -39,6 +42,7 @@ const routes: Array<RouteRecordRaw> = [
     component: gameTwoPlayersScreen,
   },
   {
+<<<<<<< HEAD
     path: "/breathtest/:player",
     name: "breathtest",
     component: () => import("../views/breathTestScreen.vue"),
@@ -52,6 +56,21 @@ const routes: Array<RouteRecordRaw> = [
     path: "/intoxicated/:player",
     name: "intoxicated",
     component: () => import("../views/intoxicatedScreen.vue"),
+=======
+    path: "/roundOne",
+    name: "roundOne",
+    component: gameTwoPlayerRoundOneScreen,
+  },
+  {
+    path: "/roundTwo",
+    name: "roundTwo",
+    component: gameTwoPlayerRoundTwoScreen,
+  },
+  {
+    path: "/roundThree",
+    name: "roundThree",
+    component: gameTwoPlayerRoundThreeScreen,
+>>>>>>> origin/main
   },
 ];
 
