@@ -1,13 +1,7 @@
 <template>
-    <h1>Move & prove</h1>
+    <p class=" text-center color-black pt-14 text-3xl">Move & prove</p>
     <div>
 
     </div>
 </template>
-<style scoped>
-h1 {
-    text-align: center;
-    color: Black;
-    margin-top: 5%;
-}
-</style>
+<style scoped></style>
